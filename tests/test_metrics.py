@@ -1,4 +1,5 @@
-from core.models import Diagnosis, RunResult
+from pathlib import Path
+from core.models import Diagnosis, RunResult, Symptoms
 from eval.metrics import parse_gold_files, acc_at_k, compute_metrics
 
 PATCH = """diff --git a/django/db/models/query.py b/django/db/models/query.py
@@ -84,3 +85,23 @@ def test_compute_metrics_skips_error_results():
     instances = [{"instance_id": "test__repo-1", "patch": PATCH}]
     metrics = compute_metrics(results, instances)
     assert metrics["total"] == 0
+
+
+from unittest.mock import patch
+from eval.baseline import run_baseline
+
+
+def test_baseline_returns_run_result(tmp_path):
+    (tmp_path / "core.py").write_text("def filter(): raise ValueError('oops')")
+    symptoms = Symptoms(error_messages=["ValueError"])
+    result = run_baseline("test__repo-1", symptoms, tmp_path)
+    assert result.instance_id == "test__repo-1"
+    assert result.diagnosis is not None
+    assert result.diagnosis.rounds == 0
+
+
+def test_baseline_error_on_exception():
+    with patch("eval.baseline.retrieve", side_effect=RuntimeError("boom")):
+        result = run_baseline("test__repo-1", Symptoms(), Path("/nonexistent"))
+    assert result.error is not None
+    assert result.diagnosis is None

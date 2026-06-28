@@ -18,7 +18,7 @@ pytestmark = pytest.mark.skipif(
 )
 
 N_INSTANCES = 5
-OUTPUT_DIR = Path("output/integration")
+OUTPUT_DIR = Path(__file__).parent.parent / "output" / "integration"
 
 
 def test_pipeline_on_dev_slice():

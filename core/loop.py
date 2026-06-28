@@ -11,6 +11,8 @@ def run_instance(issue: Issue, repo_dir: Path) -> RunResult:
     try:
         candidates = retrieve(issue.symptoms, repo_dir, top_n=10)
         hypotheses = hypothesize(issue.symptoms, candidates)
+        if not hypotheses:
+            raise ValueError(f"Hypothesizer returned no hypotheses for {issue.instance_id}")
         verdicts = [verify(h, repo_dir) for h in hypotheses]
 
         confirmed = [

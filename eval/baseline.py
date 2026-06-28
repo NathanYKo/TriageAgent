@@ -1,10 +1,10 @@
 import time
 from pathlib import Path
-from core.models import RunResult, Diagnosis
+from core.models import RunResult, Diagnosis, Symptoms
 from pipeline.retriever import retrieve
 
 
-def run_baseline(instance_id: str, symptoms, repo_dir: Path) -> RunResult:
+def run_baseline(instance_id: str, symptoms: Symptoms, repo_dir: Path) -> RunResult:
     start = time.monotonic()
     try:
         candidates = retrieve(symptoms, repo_dir, top_n=5)
