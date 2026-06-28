@@ -19,7 +19,7 @@ def test_build_index_finds_py_files():
         "foo/baz.py": "def baz(): raise ValueError('oops')",
         "README.md": "not python",
     })
-    files, bm25 = build_index(repo)
+    files, bm25, texts = build_index(repo)
     assert len(files) == 2
     assert all(f.suffix == ".py" for f in files)
 

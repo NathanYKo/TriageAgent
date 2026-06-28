@@ -10,6 +10,9 @@ _ERROR_RE = re.compile(
 _IDENTIFIER_RE = re.compile(
     r'\b([a-z_][a-z0-9_]*(?:\.[a-z_][a-z0-9_]*)+)\b'
 )
+_REPRO_PREFIXES = ("```", ">>>", "$ ")
+MAX_ERRORS = 10
+MAX_IDENTIFIERS = 30
 
 
 def parse_issue(title: str, body: str) -> Symptoms:
@@ -20,13 +23,13 @@ def parse_issue(title: str, body: str) -> Symptoms:
         for m in _TRACEBACK_RE.finditer(text)
     ]
 
-    errors = list(dict.fromkeys(_ERROR_RE.findall(text)))[:10]
-    identifiers = list(dict.fromkeys(_IDENTIFIER_RE.findall(text)))[:30]
+    errors = list(dict.fromkeys(_ERROR_RE.findall(text)))[:MAX_ERRORS]
+    identifiers = list(dict.fromkeys(_IDENTIFIER_RE.findall(text)))[:MAX_IDENTIFIERS]
 
     repro_steps = [
-        line.strip()
+        s
         for line in body.split("\n")
-        if line.strip().startswith(("```", ">>>", "$ "))
+        if (s := line.strip()).startswith(_REPRO_PREFIXES)
     ]
 
     return Symptoms(
