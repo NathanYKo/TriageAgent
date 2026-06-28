@@ -1,0 +1,29 @@
+{
+  "patterns": [
+    {
+      "name": "none_dereference",
+      "keywords": ["NoneType", "AttributeError", "None has no attribute"],
+      "description": "Accessing attribute or method on None"
+    },
+    {
+      "name": "off_by_one",
+      "keywords": ["IndexError", "index out of range", "list index"],
+      "description": "Array/list index boundary error"
+    },
+    {
+      "name": "wrong_default",
+      "keywords": ["default", "mutable default", "mutable argument"],
+      "description": "Mutable default argument or wrong default value"
+    },
+    {
+      "name": "missing_edge_case",
+      "keywords": ["empty list", "empty string", "zero", "None input"],
+      "description": "Edge case not handled (empty input, zero, None)"
+    },
+    {
+      "name": "api_misuse",
+      "keywords": ["TypeError", "unexpected keyword", "positional argument"],
+      "description": "Incorrect API call signature"
+    }
+  ]
+}
