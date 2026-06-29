@@ -1,4 +1,5 @@
 import json
+import re
 from pathlib import Path
 import anthropic
 from core.models import Hypothesis, Verdict
@@ -26,14 +27,21 @@ def verify(hypothesis: Hypothesis, repo_dir: Path) -> Verdict:
     )
 
     response = client.messages.create(
-        model="claude-haiku-4-5-20251001",
+        model="claude-opus-4-8",
         max_tokens=256,
         messages=[{"role": "user", "content": prompt}],
     )
 
     text = response.content[0].text
     start, end = text.find("{"), text.rfind("}") + 1
-    data = json.loads(text[start:end])
+    if start == -1 or end == 0:
+        raise ValueError(f"No JSON object found in verifier response: {text[:200]}")
+    raw = text[start:end]
+    try:
+        data = json.loads(raw)
+    except json.JSONDecodeError:
+        raw = re.sub(r'\\(?!["\\/bfnrtu])', r'\\\\', raw)
+        data = json.loads(raw)
     return Verdict(
         hypothesis=hypothesis,
         status=data["status"],

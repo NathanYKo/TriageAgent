@@ -23,7 +23,7 @@ def run_instance(issue: Issue, repo_dir: Path) -> RunResult:
 
         diagnosis = Diagnosis(
             instance_id=issue.instance_id,
-            predicted_files=[h.location_file for h in hypotheses],
+            predicted_files=list(dict.fromkeys(h.location_file for h in hypotheses)),
             predicted_functions=[h.location_function for h in hypotheses if h.location_function],
             confidence=best_h.confidence if confirmed else best_h.confidence * 0.5,
             evidence_chain=[best_v.reason],

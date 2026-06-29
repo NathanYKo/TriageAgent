@@ -79,4 +79,4 @@ def test_hypothesize_uses_correct_model():
         hypothesize(symptoms, candidates)
 
     call_kwargs = mock_client.messages.create.call_args
-    assert call_kwargs[1]["model"] == "claude-sonnet-4-6"
+    assert call_kwargs[1]["model"] == "claude-opus-4-8"

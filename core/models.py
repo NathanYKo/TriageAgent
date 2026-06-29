@@ -34,9 +34,9 @@ class Hypothesis(BaseModel):
     location_file: str
     location_function: str | None = None
     rationale: str
-    predicted_evidence: str
+    predicted_evidence: str = ""
     confidence: float
-    rank: int
+    rank: int = 0
 
 
 class Verdict(BaseModel):

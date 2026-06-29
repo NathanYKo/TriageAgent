@@ -40,7 +40,7 @@ def test_verify_rejected_missing_file(tmp_path):
     assert "not found" in verdict.reason.lower() or "does not exist" in verdict.reason.lower()
 
 
-def test_verify_uses_haiku_model(tmp_path):
+def test_verify_uses_correct_model(tmp_path):
     (tmp_path / "src").mkdir()
     (tmp_path / "src" / "foo.py").write_text("def bar(): pass")
 
@@ -49,7 +49,7 @@ def test_verify_uses_haiku_model(tmp_path):
         verify(BASE_HYPOTHESIS, tmp_path)
 
     call_kwargs = mock_client.messages.create.call_args
-    assert call_kwargs[1]["model"] == "claude-haiku-4-5-20251001"
+    assert call_kwargs[1]["model"] == "claude-opus-4-8"
 
 
 def test_verify_passes_code_to_llm(tmp_path):

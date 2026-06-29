@@ -6,6 +6,7 @@ from core.models import Candidate, Symptoms
 
 _WORD_RE = re.compile(r'\w+')
 SNIPPET_CHARS = 500
+_INDEX_CACHE: dict[Path, tuple[list[Path], BM25Plus, list[str]]] = {}
 
 
 def _tokenize(text: str) -> list[str]:
@@ -21,11 +22,15 @@ def _safe_read(path: Path, limit: int | None = None) -> str:
 
 
 def build_index(repo_dir: Path) -> tuple[list[Path], BM25Plus, list[str]]:
+    if repo_dir in _INDEX_CACHE:
+        return _INDEX_CACHE[repo_dir]
     files = [f for f in repo_dir.rglob("*.py") if ".git" not in f.parts]
     texts = [_safe_read(f) for f in files]
     corpus = [_tokenize(t) for t in texts]
     bm25 = BM25Plus(corpus if corpus else [[""]])
-    return files, bm25, texts
+    result = files, bm25, texts
+    _INDEX_CACHE[repo_dir] = result
+    return result
 
 
 def retrieve(symptoms: Symptoms, repo_dir: Path, top_n: int = 10) -> list[Candidate]:
