@@ -2,6 +2,7 @@ import click
 from pathlib import Path
 from pipeline.swebench_loader import load_instances, checkout_repo, instance_to_issue
 from core.loop import run_instance
+from core.db import open_db, save_run, completed_ids
 from report.generator import generate_report
 from eval.metrics import compute_metrics, parse_gold_files
 
@@ -15,7 +16,9 @@ def cli():
 @click.option("--instance", "instance_id", required=True, help="SWE-bench instance ID")
 @click.option("--output", default="output/reports", help="Report output directory")
 @click.option("--n-load", default=300, help="Number of instances to load for lookup")
-def main(instance_id: str, output: str, n_load: int):
+@click.option("--db", "db_path", default="output/triage.db", show_default=True,
+              help="Path to SQLite results DB")
+def main(instance_id: str, output: str, n_load: int, db_path: str):
     instances = load_instances(n=n_load)
     id_map = {inst["instance_id"]: inst for inst in instances}
 
@@ -30,6 +33,12 @@ def main(instance_id: str, output: str, n_load: int):
     repo_dir = checkout_repo(inst)
     result = run_instance(issue, Path(str(repo_dir)))
 
+    conn = open_db(Path(db_path))
+    try:
+        save_run(conn, result)
+    finally:
+        conn.close()
+
     if result.diagnosis:
         json_p, md_p = generate_report(result.diagnosis, Path(output))
         click.echo(f"Predicted files: {result.diagnosis.predicted_files}")
@@ -42,21 +51,36 @@ def main(instance_id: str, output: str, n_load: int):
 @cli.command("dev-slice")
 @click.option("--n", default=5, help="Number of instances to evaluate")
 @click.option("--output", default="output/reports", help="Report output directory")
-def run_dev_slice_cmd(n: int, output: str):
+@click.option("--db", "db_path", default="output/triage.db", show_default=True,
+              help="Path to SQLite results DB")
+def run_dev_slice_cmd(n: int, output: str, db_path: str):
     instances = load_instances(n=n)
     results = []
 
-    for inst in instances:
-        iid = inst["instance_id"]
-        click.echo(f"Running {iid}...")
-        try:
-            issue = instance_to_issue(inst)
-            repo_dir = checkout_repo(inst)
-            result = run_instance(issue, Path(str(repo_dir)))
-            results.append(result)
-            generate_report(result.diagnosis or _empty_diagnosis(iid), Path(output))
-        except Exception as e:
-            click.echo(f"  ERROR: {e}")
+    conn = open_db(Path(db_path))
+    try:
+        done = completed_ids(conn)
+        if done:
+            click.echo(f"Resuming: {len(done)} already completed, skipping.")
+
+        for inst in instances:
+            iid = inst["instance_id"]
+            if iid in done:
+                click.echo(f"Skipping {iid} (already in DB).")
+                continue
+
+            click.echo(f"Running {iid}...")
+            try:
+                issue = instance_to_issue(inst)
+                repo_dir = checkout_repo(inst)
+                result = run_instance(issue, Path(str(repo_dir)))
+                results.append(result)
+                save_run(conn, result)
+                generate_report(result.diagnosis or _empty_diagnosis(iid), Path(output))
+            except Exception as e:
+                click.echo(f"  ERROR: {e}")
+    finally:
+        conn.close()
 
     metrics = compute_metrics(results, instances)
     click.echo(f"\n=== Dev Slice Results (n={n}) ===")
