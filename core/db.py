@@ -65,9 +65,9 @@ def load_run(conn: sqlite3.Connection, instance_id: str) -> RunResult | None:
 
 
 def completed_ids(conn: sqlite3.Connection) -> set[str]:
-    """Return instance_ids that completed successfully (error IS NULL).
+    """Return instance_ids with a successful diagnosis (error IS NULL AND diagnosis_json IS NOT NULL).
 
-    Error runs are excluded so they can be retried.
+    Error runs and bare runs (neither diagnosis nor error) are excluded so they can be retried.
     """
     rows = conn.execute(
         "SELECT instance_id FROM runs WHERE error IS NULL AND diagnosis_json IS NOT NULL"
