@@ -154,3 +154,10 @@ def test_completed_ids_multiple_successes(conn, sample_diagnosis):
         diag = sample_diagnosis.model_copy(update={"instance_id": iid})
         save_run(conn, RunResult(instance_id=iid, diagnosis=diag))
     assert completed_ids(conn) == {"a__b-1", "a__b-2", "a__b-3"}
+
+
+def test_completed_ids_excludes_null_null_run(conn):
+    """A run with neither diagnosis nor error is not treated as complete."""
+    bare = RunResult(instance_id="bare__run-0")
+    save_run(conn, bare)
+    assert "bare__run-0" not in completed_ids(conn)

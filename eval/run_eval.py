@@ -104,6 +104,8 @@ def main(n: int, output: str, db_path: str | None):
         / max(agent_m["total"], 1)
     )
 
+    if done:
+        print(f"NOTE: metrics reflect only {len(agent_results)} new run(s); {len(done)} instance(s) skipped from DB.")
     print(f"\n{'='*52}")
     print(f"{'Metric':<22} {'HVR Agent':>12} {'BM25':>12}")
     print(f"{'-'*52}")

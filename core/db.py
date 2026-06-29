@@ -70,6 +70,6 @@ def completed_ids(conn: sqlite3.Connection) -> set[str]:
     Error runs are excluded so they can be retried.
     """
     rows = conn.execute(
-        "SELECT instance_id FROM runs WHERE error IS NULL"
+        "SELECT instance_id FROM runs WHERE error IS NULL AND diagnosis_json IS NOT NULL"
     ).fetchall()
     return {row[0] for row in rows}
